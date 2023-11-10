@@ -1,12 +1,11 @@
 import streamlit as st
 import numpy as np
 import cv2 as cv
+import joblib
 
-st.subheader('Phát hiện khuôn mặt')
+st.subheader('Nhận dạng khuôn mặt')
 FRAME_WINDOW = st.image([])
-deviceId = 0
-cap = cv.VideoCapture(deviceId)
-
+cap = cv.VideoCapture(0)
 
 if 'stop' not in st.session_state:
     st.session_state.stop = False
@@ -31,7 +30,11 @@ if st.session_state.stop == True:
     FRAME_WINDOW.image(st.session_state.frame_stop, channels='BGR')
 
 
-def visualize(input, faces, fps, thickness=2):
+svc = joblib.load('models/svc.pkl')
+mydict = ['Duy', 'Ngoc']
+
+
+def visualize(input, faces, fps, names=None, thickness=2):
     if faces[1] is not None:
         for idx, face in enumerate(faces[1]):
             # print('Face {}, top-left coordinates: ({:.0f}, {:.0f}), box width: {:.0f}, box height {:.0f}, score: {:.2f}'.format(idx, face[0], face[1], face[2], face[3], face[-1]))
@@ -46,40 +49,58 @@ def visualize(input, faces, fps, thickness=2):
                       2, (255, 0, 255), thickness)
             cv.circle(input, (coords[12], coords[13]),
                       2, (0, 255, 255), thickness)
+
+            # Write name information on the detected face
+            if names is not None:
+                text_x = coords[0]  # Adjust the horizontal position as needed
+                # Adjust the vertical position as needed
+                text_y = coords[1] - 10
+                cv.putText(input, names, (text_x, text_y),
+                           cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
     cv.putText(input, 'FPS: {:.2f}'.format(fps), (1, 16),
                cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
 
-detector = cv.FaceDetectorYN.create(
-    'models/face_detect/face_detection_yunet_2023mar.onnx',
-    "",
-    (320, 320),
-    0.9,
-    0.3,
-    5000
-)
+if __name__ == '__main__':
+    detector = cv.FaceDetectorYN.create(
+        'models/face_detect/face_detection_yunet_2023mar.onnx',
+        "",
+        (320, 320),
+        0.9,
+        0.3,
+        5000)
 
-tm = cv.TickMeter()
-frameWidth = int(cap.get(cv.CAP_PROP_FRAME_WIDTH))
-frameHeight = int(cap.get(cv.CAP_PROP_FRAME_HEIGHT))
-detector.setInputSize([frameWidth, frameHeight])
+    recognizer = cv.FaceRecognizerSF.create(
+        'models/face_detect/face_recognition_sface_2021dec.onnx', "")
 
-while True:
-    hasFrame, frame = cap.read()
-    if not hasFrame:
-        print('No frames grabbed!')
-        break
+    tm = cv.TickMeter()
 
-    frame = cv.resize(frame, (frameWidth, frameHeight))
+    frameWidth = int(cap.get(cv.CAP_PROP_FRAME_WIDTH))
+    frameHeight = int(cap.get(cv.CAP_PROP_FRAME_HEIGHT))
+    detector.setInputSize([frameWidth, frameHeight])
 
-    # Inference
-    tm.start()
-    faces = detector.detect(frame)  # faces is a tuple
-    tm.stop()
+    dem = 0
+    while True:
+        hasFrame, frame = cap.read()
+        if not hasFrame:
+            print('No frames grabbed!')
+            break
 
-    # Draw results on the input image
-    visualize(frame, faces, tm.getFPS())
+        # Inference
+        tm.start()
+        faces = detector.detect(frame)  # faces is a tuple
+        tm.stop()
 
-    # Visualize results
-    FRAME_WINDOW.image(frame, channels='BGR')
-cv.destroyAllWindows()
+        if faces[1] is not None:
+            face_align = recognizer.alignCrop(frame, faces[1][0])
+            face_feature = recognizer.feature(face_align)
+            test_predict = svc.predict(face_feature)
+            result = mydict[test_predict[0]]
+
+        # Draw results on the input image
+        visualize(frame, faces, tm.getFPS(), result)
+
+        # Visualize results
+        FRAME_WINDOW.image(frame, channels='BGR')
+    cv.destroyAllWindows()
