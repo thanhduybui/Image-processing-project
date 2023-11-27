@@ -56,7 +56,7 @@ def Logarit(imgin):
 
 def Power(imgin):
     imgout = np.zeros_like(imgin, dtype=np.uint8)
-    gamma = 0.9
+    gamma = 1.1
     c = np.power(255, 1 - gamma)  # Assuming 8-bit image (0-255)
 
     img_power = c * np.power(imgin.astype(np.float32) / 255.0, gamma) * 255.0
