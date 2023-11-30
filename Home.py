@@ -71,11 +71,13 @@ def take_information_from_contact(email, text):
         file.write(text)
 
 # Contact form
-with st.expander('Liên hệ với chúng tôi'):
-    with st.form(key='contact', clear_on_submit=True):
-        email = st.text_input('Email liên hệ của bạn')
-        text = st.text_area('Nội dung', '').encode('utf-8')
-        submit_button = st.form_submit_button(label='Gửi thông tin')
+expander = st.expander('Liên hệ với chúng tôi')
+with expander:
+    form = st.form(key='contact', clear_on_submit=True)
+    
+    email = form.text_input('Email liên hệ của bạn')
+    text = form.text_area('Nội dung', '').encode('utf-8')
+    submit_button = form.form_submit_button(label='Gửi thông tin')
 
-        if submit_button:
-            take_information_from_contact(email, text)
+    if submit_button:
+        take_information_from_contact(email, text)

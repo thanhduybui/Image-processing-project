@@ -6,7 +6,45 @@ from algorithm import Chapter04 as c4
 from algorithm import Chapter05 as c5
 from algorithm import Chapter09 as c9
 # Streamlit code
+# Set page configuration
+st.set_page_config(
+    page_title='Project',
+    layout='wide',
+    initial_sidebar_state='collapsed',
+    page_icon='./images/icon_1.png'
+)
 
+# Set custom CSS styles
+st.markdown(
+    """
+    <style>
+    body {
+        background-color: #F0F2F6;
+        color: #333333;
+    }
+    .stButton {
+        background-color: #4CAF50 !important;
+        color: white !important;
+    }
+    .stTextInput {
+        border: 1px solid #4CAF50 !important;
+    }
+    .highlight {
+        background-color: #EAF7FF;
+        padding: 12px;
+        margin-bottom: 12px;
+        border-radius: 5px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# Display banner image
+st.image('./images/banner.png')
+
+# Display page title
+st.title('ĐỒ ÁN MÔN XỬ LÝ ẢNH NĂM HỌC 2023')
 
 def main():
     st.title("Machine Vision")

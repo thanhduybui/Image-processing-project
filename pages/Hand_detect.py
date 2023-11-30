@@ -10,33 +10,50 @@ from collections import deque
 import cv2 as cv
 import numpy as np
 import mediapipe as mp
-
-from utils import CvFpsCalc
-from model import KeyPointClassifier
-from model import PointHistoryClassifier
+from models import KeyPointClassifier
+from models import PointHistoryClassifier
 import streamlit as st
 
-st.set_page_config(page_title=" Nhận dạng cử chỉ tay", page_icon="🌐")
-page_bg_img = """
-<style>
-[data-testid="stAppViewContainer"] {
-    background-image: url("");
-    background-size: 100% 100%;
-}
-[data-testid="stHeader"]{
-    background: rgba(0,0,0,0);
-}
-[data-testid="stToolbar"]{
-    right:2rem;
-}
-[data-testid="stSidebar"] > div:first-child {
-    background-image: url("https://i.pinimg.com/564x/bc/43/27/bc43279827af63b3fdba3c93514c69a8.jpg");
-    background-position: center;
-}
-</style>
-"""
-st.markdown(page_bg_img, unsafe_allow_html=True)
-st.markdown("# Nhận dạng cử chỉ tay")
+# Set page configuration
+st.set_page_config(
+    page_title='Project',
+    layout='wide',
+    initial_sidebar_state='collapsed',
+    page_icon='./images/icon_1.png'
+)
+
+# Set custom CSS styles
+st.markdown(
+    """
+    <style>
+    body {
+        background-color: #F0F2F6;
+        color: #333333;
+    }
+    .stButton {
+        background-color: #4CAF50 !important;
+        color: white !important;
+    }
+    .stTextInput {
+        border: 1px solid #4CAF50 !important;
+    }
+    .highlight {
+        background-color: #EAF7FF;
+        padding: 12px;
+        margin-bottom: 12px;
+        border-radius: 5px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# Display banner image
+st.image('./images/banner.png')
+
+# Display page title
+st.title('ĐỒ ÁN MÔN XỬ LÝ ẢNH NĂM HỌC 2023')
+st.title(" Nhận dạng cử chỉ tay")
 FRAME_WINDOW = st.image([])
 def get_args():
     parser = argparse.ArgumentParser()
@@ -59,6 +76,23 @@ def get_args():
 
     return args
 
+class CvFpsCalc(object):
+    def __init__(self, buffer_len=1):
+        self._start_tick = cv.getTickCount()
+        self._freq = 1000.0 / cv.getTickFrequency()
+        self._difftimes = deque(maxlen=buffer_len)
+
+    def get(self):
+        current_tick = cv.getTickCount()
+        different_time = (current_tick - self._start_tick) * self._freq
+        self._start_tick = current_tick
+
+        self._difftimes.append(different_time)
+
+        fps = 1000.0 / (sum(self._difftimes) / len(self._difftimes))
+        fps_rounded = round(fps, 2)
+
+        return fps_rounded
 
 def main():
     # Argument parsing #################################################################
@@ -93,14 +127,14 @@ def main():
     point_history_classifier = PointHistoryClassifier()
 
     
-    with open('D:\learning\XLA\model\model\keypoint_classifier\keypoint_classifier_label.csv',
+    with open('D:\learning\XLA\model\keypoint_classifier\keypoint_classifier_label.csv',
               encoding='utf-8-sig') as f:
         keypoint_classifier_labels = csv.reader(f)
         keypoint_classifier_labels = [
             row[0] for row in keypoint_classifier_labels
         ]
     with open(
-            'D:\learning\XLA\model\model\keypoint_classifier\keypoint_classifier_label.csv',
+            'D:\learning\XLA\model\keypoint_classifier\keypoint_classifier_label.csv',
             encoding='utf-8-sig') as f:
         point_history_classifier_labels = csv.reader(f)
         point_history_classifier_labels = [
@@ -304,12 +338,12 @@ def logging_csv(number, mode, landmark_list, point_history_list):
     if mode == 0:
         pass
     if mode == 1 and (0 <= number <= 9):
-        csv_path = 'C:/Users/user/Documents/HK1-N4/XuLyAnh/WebDemo/model/keypoint_classifier/keypoint.csv'
+        csv_path = 'D:\learning\XLA\model\keypoint_classifier\keypoint.csv'
         with open(csv_path, 'a', newline="") as f:
             writer = csv.writer(f)
             writer.writerow([number, *landmark_list])
     if mode == 2 and (0 <= number <= 9):
-        csv_path = 'C:/Users/user/Documents/HK1-N4/XuLyAnh/WebDemo/model/point_history_classifier/point_history.csv'
+        csv_path = 'D:\learning\XLA\model\point_history_classifier\point_history.csv'
         with open(csv_path, 'a', newline="") as f:
             writer = csv.writer(f)
             writer.writerow([number, *point_history_list])

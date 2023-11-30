@@ -13,17 +13,48 @@ import numpy as np
 import threading
 import tensorflow as tf
 import argparse
+import pythoncom 
 
-# access system's volume control
-devices = AudioUtilities.GetSpeakers()
-interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-volume = cast(interface, POINTER(IAudioEndpointVolume))
-# volume.GetMute()
-# volume.GetMasterVolumeLevel()
-volRange = volume.GetVolumeRange()
-volMin = volRange[0]
-volMax = volRange[1]
-st.set_page_config(page_title="Nhận dạng hành vi con người", page_icon="🌐")
+
+# Set page configuration
+st.set_page_config(
+    page_title='Project',
+    layout='wide',
+    initial_sidebar_state='collapsed',
+    page_icon='./images/icon_1.png'
+)
+
+# Set custom CSS styles
+st.markdown(
+    """
+    <style>
+    body {
+        background-color: #F0F2F6;
+        color: #333333;
+    }
+    .stButton {
+        background-color: #4CAF50 !important;
+        color: white !important;
+    }
+    .stTextInput {
+        border: 1px solid #4CAF50 !important;
+    }
+    .highlight {
+        background-color: #EAF7FF;
+        padding: 12px;
+        margin-bottom: 12px;
+        border-radius: 5px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# Display banner image
+st.image('./images/banner.png')
+
+# Display page title
+st.title('ĐỒ ÁN MÔN XỬ LÝ ẢNH NĂM HỌC 2023')
 page_bg_img = """
 <style>
 [data-testid="stAppViewContainer"] {
@@ -66,7 +97,18 @@ def get_args():
 
     return args
 def main():
+    # Call CoInitialize to initialize the COM library
     pythoncom.CoInitialize()
+
+    # Retrieve the speakers' information
+    devices = AudioUtilities.GetSpeakers()
+    interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+    volume = cast(interface, POINTER(IAudioEndpointVolume))
+    # volume.GetMute()
+    # volume.GetMasterVolumeLevel()
+    volRange = volume.GetVolumeRange()
+    volMin = volRange[0]
+    volMax = volRange[1]
     label = "Warmup...."
     n_time_steps = 10
     lm_list = []
